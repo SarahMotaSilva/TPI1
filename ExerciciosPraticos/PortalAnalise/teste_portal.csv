@@ -1,0 +1,6 @@
+id,tipo_chamado,tempo_gasto,data_chamado,titulo,categoria_detalhada
+1,Bug,3.5,2026-01-15,Erro na leitura de CNPJ,Leitura CNPJ/CPF
+2,Melhoria,1.0,2026-01-20,Novo campo de impostos,Impostos
+3,Bug,5.0,2026-02-10,PDF nao processado,Erro OCR
+4,Bug,2.0,2026-02-15,Valor incorreto na nota,Valor monetario
+5,Melhoria,0.5,2026-03-01,Melhorar template,Mapeamento

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leitura.analytics — Painel de Chamados</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header class="main-header">
+      <div class="header-main">
+        <h1>Portal Leitura.analytics</h1>
+        <button id="btnTema" class="theme-toggle-btn">🌙 Modo Escuro</button>
+      </div>
+
+      <div class="filters-bar">
+        <input type="text" id="txtSearch" placeholder="Pesquisar por ID ou título...">
+        <input type="date" id="dtStart">
+        <input type="date" id="dtEnd">
+        <select id="selCategory">
+          <option value="">Todas as Categorias</option>
+        </select>
+        <select id="selType">
+          <option value="">Todos os Tipos</option>
+        </select>
+
+        <select id="selRefFilter">
+          <option value="">Filtro por Referência</option>
+          <option value="reforma">Apenas Reforma Tributária</option>
+          <option value="outros">Sem Reforma Tributária</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="dashboard-actions" style="margin-bottom: 1rem; display: flex; justify-content: flex-end;">
+      <button id="btnExportarPdf" class="action-btn secondary-btn">📄 Exportar Dashboard em PDF</button>
+    </div>
+
+    <div id="containerInsights" class="insights-grid"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js"></script>
+
+    <section class="upload-section">
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-zone-content">
+          <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p class="drop-zone-text">Arraste seu arquivo CSV de chamados aqui ou <span class="browse-btn">clique para
+              buscar</span></p>
+          <input type="file" id="fileInput" accept=".csv" style="display: none;">
+        </div>
+      </div>
+    </section>
+
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="analise-texto">Análise de Erros (Regex)</button>
+      <button class="tab-btn" data-tab="gerador-sql">Gerador de SQL</button>
+      <button class="tab-btn" data-tab="exportar">Exportar JSON</button>
+    </nav>
+
+    <main class="tab-content-wrapper">
+
+      <div id="dashboard" class="tab-content active">
+
+        <div class="dashboard-actions" style="margin: 1rem 0; display: flex; justify-content: flex-end;">
+          <button id="btnExportarPdf" class="action-btn secondary-btn">📄 Exportar Dashboard em PDF</button>
+        </div>
+
+        <div class="kpi-grid">
+
+          <div class="kpi-card">
+            <div class="kpi-title">Total de Chamados</div>
+            <div id="kpiTotal" class="kpi-value">—</div>
+            <div class="kpi-sub">Registados no ficheiro</div>
+          </div>
+
+          <div class="kpi-card highlight-bug">
+            <div class="kpi-title">Volume de Bugs</div>
+            <div id="kpiBugs" class="kpi-value">—</div>
+            <div id="kpiBugsPercent" class="kpi-sub">— % do total</div>
+          </div>
+
+          <div class="kpi-card highlight-improvement">
+            <div class="kpi-title">Melhorias Solicitadas</div>
+            <div id="kpiImprovements" class="kpi-value">—</div>
+            <div id="kpiImprovementsPercent" class="kpi-sub">— % do total</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-title">Tempo Médio Gasto</div>
+            <div id="kpiAvgTime" class="kpi-value">—</div>
+            <div class="kpi-sub">Horas por chamado</div>
+          </div>
+
+        </div>
+
+        <div class="charts-grid">
+
+          <div class="chart-panel full-width">
+            <h3>Evolução Mensal: Distribuição de Carga de Trabalho</h3>
+            <div class="chart-container">
+              <canvas id="chartEvolucao"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-panel">
+            <h3>Proporção por Tipo de Chamado</h3>
+            <div class="chart-container">
+              <canvas id="chartProporcao"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-panel">
+            <h3>Chamados por Categoria Detalhada</h3>
+            <div class="chart-container">
+              <canvas id="chartCategorias"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <div id="analise-texto" class="tab-content">
+        <div class="aba-header">
+          <h3>Varredura Automatizada de Logs e Erros</h3>
+          <p class="aba-desc">Abaixo estão listados os chamados que contêm padrões clássicos de falhas críticas de
+            sistema identificados via Expressões Regulares (Regex).</p>
+        </div>
+
+        <div id="containerErros" class="log-container">
+          <div class="empty-state">Aguardando importação do arquivo CSV para processar a varredura de padrões...</div>
+        </div>
+      </div>
+
+      <div id="gerador-sql" class="tab-content">
+        <div class="aba-header">
+          <h3>Conversão Automatizada de Dados para Banco de Dados</h3>
+          <p class="aba-desc">Gere e copie comandos SQL de inserção em massa (`INSERT INTO`) baseados nas linhas
+            importadas do seu arquivo CSV.</p>
+        </div>
+
+        <div class="sql-box-wrapper">
+          <div class="sql-actions">
+            <button id="btnGerarSql" class="action-btn primary-btn">Gerar Queries SQL</button>
+            <button id="btnCopiarSql" class="action-btn secondary-btn" disabled>Copiar para o Clipboard</button>
+          </div>
+          <textarea id="outputSql" class="code-textarea" readonly
+            placeholder="A query SQL gerada aparecerá aqui..."></textarea>
+        </div>
+      </div>
+
+      <div id="exportar" class="tab-content">
+        <div class="aba-header">
+          <h3>Normalização e Exportação de Dados</h3>
+          <p class="aba-desc">Faça o download de toda a estrutura de dados tratada, sanitizada e agrupada nativamente em
+            formato JSON para integração com outros sistemas.</p>
+        </div>
+
+        <div class="export-box">
+          <div class="export-icon-container">
+            <svg class="json-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p class="export-txt">A estrutura de dados tratada e convertida está pronta.</p>
+          <button id="btnExportarJson" class="action-btn success-btn">Baixar Arquivo .JSON</button>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="main-footer">
+      <p>Material didático — Curso de Tecnologias para a Internet — 2026</p>
+      <p class="security-note">🔒 100% Client-Side: Seus dados não são enviados para nenhum servidor.</p>
+    </footer>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

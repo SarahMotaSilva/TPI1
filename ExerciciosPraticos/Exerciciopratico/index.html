@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercícios Práticos - Chart.js 2026</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            color: #475569;
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .nav-buttons button {
+            background-color: #fff;
+            color: #6366f1;
+            border: 2px solid #6366f1;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-buttons button:hover,
+        .nav-buttons button.active {
+            background-color: #6366f1;
+            color: #fff;
+        }
+
+        .chart-wrapper {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 90%;
+            max-width: 700px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Painel de Exercícios - Chart.js</h1>
+    <h2>Selecione abaixo o exercício que deseja visualizar:</h2>
+
+    <div class="nav-buttons">
+        <button onclick="carregarEx(1)" id="btn1" class="active">Ex 1: Barras Simples</button>
+        <button onclick="carregarEx(2)" id="btn2">Ex 2: Rosca com Legenda</button>
+        <button onclick="carregarEx(3)" id="btn3">Ex 3: Linha Preenchida</button>
+        <button onclick="carregarEx(4)" id="btn4">Ex 4: Barras Horizontais</button>
+        <button onclick="carregarEx(5)" id="btn5">Ex 5: Barras Empilhadas</button>
+        <button onclick="carregarEx(6)" id="btn6">Ex 6: Múltiplas Linhas</button>
+    </div>
+
+    <div class="chart-wrapper">
+        <div class="chart-container">
+            <canvas id="meuCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- DADOS REAIS DO CSV (Seção 2) ---
+        const dados = [
+            { id: 1, tipo_chamado: "Bug", tempo_gasto: 3.5, data_chamado: "2026-01-15", categoria_detalhada: "Leitura CNPJ/CPF" },
+            { id: 2, tipo_chamado: "Melhoria", tempo_gasto: 1.0, data_chamado: "2026-01-20", categoria_detalhada: "Impostos" },
+            { id: 3, tipo_chamado: "Bug", tempo_gasto: 5.0, data_chamado: "2026-02-10", categoria_detalhada: "Erro OCR" },
+            { id: 4, tipo_chamado: "Bug", tempo_gasto: 2.0, data_chamado: "2026-02-15", categoria_detalhada: "Valor monetario" },
+            { id: 5, tipo_chamado: "Melhoria", tempo_gasto: 0.5, data_chamado: "2026-03-01", categoria_detalhada: "Mapeamento" },
+            { id: 6, tipo_chamado: "Bug", tempo_gasto: 4.0, data_chamado: "2026-03-10", categoria_detalhada: "Leitura CNPJ/CPF" },
+            { id: 7, tipo_chamado: "Bug", tempo_gasto: 1.5, data_chamado: "2026-03-15", categoria_detalhada: "Impostos" },
+            { id: 8, tipo_chamado: "Melhoria", tempo_gasto: 2.0, data_chamado: "2026-04-01", categoria_detalhada: "Mapeamento" },
+            { id: 9, tipo_chamado: "Bug", tempo_gasto: 6.0, data_chamado: "2026-04-12", categoria_detalhada: "Erro OCR" },
+            { id: 10, tipo_chamado: "Bug", tempo_gasto: 3.0, data_chamado: "2026-04-20", categoria_detalhada: "Valor monetario" }
+        ];
+
+        // --- FUNÇÃO AUXILIAR DE CONTAGEM (Seção 2) ---
+        function contar(array) {
+            const mapa = {};
+            array.forEach(valor => { if (valor) mapa[valor] = (mapa[valor] || 0) + 1; });
+            return Object.entries(mapa).sort((a, b) => b[1] - a[1]);
+        }
+
+        // --- REGISTRO GLOBAL DO PLUGIN DATALABELS (Seção 8) ---
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set("plugins.datalabels", { display: false });
+
+        // Variável que guarda a instância ativa do gráfico
+        let graficoInstanciado = null;
+
+        // Gerenciador de ciclo de vida (Uso obrigatório do chart.destroy() - Seção 12)
+        function gerenciarInstancia(config) {
+            const ctx = document.getElementById("meuCanvas");
+
+            if (graficoInstanciado !== null) {
+                graficoInstanciado.destroy(); // Evita duplicação e vazamento de memória
+            }
+
+            // Renderiza no frame correto (Seção 13)
+            requestAnimationFrame(() => {
+                graficoInstanciado = new Chart(ctx, config);
+            });
+        }
+
+        function alternarBotaoAtivo(num) {
+            document.querySelectorAll(".nav-buttons button").forEach(b => b.classList.remove("active"));
+            document.getElementById("btn" + num).classList.add("active");
+        }
+
+        // --- ROTEADOR DOS EXERCÍCIOS ---
+        function carregarEx(numero) {
+            alternarBotaoAtivo(numero);
+
+            // EXERCÍCIO 1: Gráfico de barras simples por categoria
+            if (numero === 1) {
+                const categorias = contar(dados.map(r => r.categoria_detalhada));
+
+                gerenciarInstancia({
+                    type: "bar",
+                    data: {
+                        labels: categorias.map(c => c[0]),
+                        datasets: [{
+                            label: "Quantidade de Chamados",
+                            data: categorias.map(c => c[1]),
+                            backgroundColor: "#6366f1",
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // EXERCÍCIO 2: Gráfico de rosca Bug vs Melhoria com porcentagem
+            else if (numero === 2) {
+                const tipos = contar(dados.map(r => r.tipo_chamado));
+                const total = dados.length;
+
+                gerenciarInstancia({
+                    type: "doughnut",
+                    data: {
+                        labels: tipos.map(t => {
+                            const pct = ((t[1] / total) * 100).toFixed(0);
+                            return `${t[0]} (${pct}%)`;
+                        }),
+                        datasets: [{
+                            data: tipos.map(t => t[1]),
+                            backgroundColor: ["#ef4444", "#6366f1"],
+                            borderWidth: 2,
+                            borderColor: "#fff"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "55%",
+                        plugins: {
+                            legend: { position: "right" }
+                        }
+                    }
+                });
+            }
+
+            // EXERCÍCIO 3: Linha com preenchimento (Horas gastas por mês)
+            else if (numero === 3) {
+                const horasPorMes = {};
+                dados.forEach(row => {
+                    const mes = row.data_chamado.slice(0, 7);
+                    horasPorMes[mes] = (horasPorMes[mes] || 0) + parseFloat(row.tempo_gasto);
+                });
+                const meses = Object.keys(horasPorMes).sort();
+                const horas = meses.map(m => horasPorMes[m]);
+
+                gerenciarInstancia({
+                    type: "line",
+                    data: {
+                        labels: ["Jan/26", "Fev/26", "Mar/26", "Abr/26"],
+                        datasets: [{
+                            label: "Total de Horas Gastas",
+                            data: horas,
+                            borderColor: "#6366f1",
+                            backgroundColor: "#6366f126",
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: "#6366f1"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // EXERCÍCIO 4: Barras horizontais com tempo médio por categoria
+            else if (numero === 4) {
+                const porCat = {};
+                dados.forEach(row => {
+                    const cat = row.categoria_detalhada;
+                    if (!porCat[cat]) porCat[cat] = { soma: 0, qtd: 0 };
+                    porCat[cat].soma += parseFloat(row.tempo_gasto);
+                    porCat[cat].qtd++;
+                });
+                const cats = Object.entries(porCat)
+                    .map(([nome, d]) => ({ nome, media: (d.soma / d.qtd).toFixed(2) }))
+                    .sort((a, b) => b.media - a.media);
+
+                gerenciarInstancia({
+                    type: "bar",
+                    data: {
+                        labels: cats.map(c => c.nome),
+                        datasets: [{
+                            data: cats.map(c => c.media),
+                            backgroundColor: "#6366f1",
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: "y",
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                display: true,
+                                color: "#444",
+                                anchor: "end",
+                                align: "right",
+                                offset: 4,
+                                font: { weight: 600, size: 11 },
+                                formatter: function (value) { return value + "h"; }
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // EXERCÍCIO 5: Barras empilhadas mensais com DataLabels em valor absoluto
+            else if (numero === 5) {
+                gerenciarInstancia({
+                    type: "bar",
+                    data: {
+                        labels: ["Jan/26", "Fev/26", "Mar/26", "Abr/26"],
+                        datasets: [
+                            {
+                                label: "Bug",
+                                data: [1, 2, 2, 2],
+                                backgroundColor: "#ef4444",
+                                borderRadius: 6,
+                                borderSkipped: false
+                            },
+                            {
+                                label: "Melhoria",
+                                data: [1, 0, 1, 1],
+                                backgroundColor: "#6366f1",
+                                borderRadius: 6,
+                                borderSkipped: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            datalabels: {
+                                display: function (context) {
+                                    return context.dataset.data[context.dataIndex] > 0;
+                                },
+                                color: "#fff",
+                                anchor: "center",
+                                align: "center",
+                                font: { weight: 'bold', size: 12 }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true },
+                            y: { stacked: true, beginAtZero: true }
+                        }
+                    }
+                }); // <-- Corrigido aqui: fechando o bloco do if sem quebrar o encadeamento!
+            }
+
+            // EXERCÍCIO 6: Múltiplas linhas simultâneas (Evolução Mensal)
+            else if (numero === 6) {
+                gerenciarInstancia({
+                    type: "line",
+                    data: {
+                        labels: ["Jan/26", "Fev/26", "Mar/26", "Abr/26"],
+                        datasets: [
+                            {
+                                label: "Bugs por Mês",
+                                data: [1, 2, 2, 2],
+                                borderColor: "#ef4444",
+                                backgroundColor: "transparent",
+                                tension: 0.35,
+                                pointRadius: 4
+                            },
+                            {
+                                label: "Melhorias por Mês",
+                                data: [1, 0, 1, 1],
+                                borderColor: "#6366f1",
+                                backgroundColor: "transparent",
+                                tension: 0.35,
+                                pointRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: "top" }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Inicialização padrão
+        carregarEx(1);
+    </script>
+</body>
+
+</html>
+
+```

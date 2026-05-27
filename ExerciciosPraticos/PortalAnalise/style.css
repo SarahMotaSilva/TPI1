@@ -1,0 +1,288 @@
+/* ==========================================================================
+   Variáveis de Tema Escuro e Botão Alternador
+   ========================================================================== */
+
+/* Classes aplicadas ao elemento HTML quando o modo escuro está ativo */
+:root.dark {
+    --bg-primary: #121214;
+    --bg-card: #1e1e24;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --brand-primary-light: #1e1b4b;
+}
+
+/* Transição suave ao mudar as cores de fundo e texto */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.kpi-card,
+.chart-panel,
+.tab-btn {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Botão do Tema */
+.theme-toggle-btn {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/*
+   Etapa 2 — Estilização Base e Layout (style.css)
+ */
+
+/*  2.1 RESET DE ESTILOS  */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/*  2.2 PALETA DE CORES E VARIÁVEIS DO SISTEMA  */
+:root {
+    /* Cores de Fundo e Painéis */
+    --bg-primary: #f8f9fa;
+    --bg-card: #ffffff;
+    --border-color: #e9ecef;
+
+    /* Tipografia e Textos */
+    --text-main: #212529;
+    --text-muted: #6c757d;
+
+    /* Identidade Visual (Brand) */
+    --brand-primary: #4361ee;
+    /* Azul Principal */
+    --brand-primary-light: #eef2ff;
+    /* Fundo suave para destaques */
+    --brand-secondary: #3f37c9;
+    /* Azul Escuro / Hover */
+
+    /* Cores Semânticas para Status e Gráficos */
+    --color-bug: #f72585;
+    /* Rosa/Vermelho para Bugs */
+    --color-improvement: #4cc9f0;
+    /* Ciano para Melhorias */
+    --color-success: #198754;
+    /* Verde para Concluídos/SQL */
+    --color-warning: #ffb703;
+    /* Amarelo para Alertas */
+
+    /* Efeitos e Sombras */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Fontes */
+    --font-sans: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ─── 2.3 CONFIGURAÇÃO DO CORPO (BODY) ─── */
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding: 2rem 1rem;
+}
+
+/* CONTAINER PRINCIPAL */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    /* Espaçamento vertical entre as seções */
+}
+
+/* ─── 2.4 CABEÇALHO (HEADER) ─── */
+.main-header {
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.main-header .logo {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.main-header .logo-accent {
+    color: var(--brand-primary);
+}
+
+.main-header .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+}
+
+/* ─── 2.5 ZONA DE UPLOAD (DRAG & DROP) ─── */
+.drop-zone {
+    background-color: var(--bg-card);
+    border: 2px dashed #bde0fe;
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Efeito visual para quando o arquivo estiver sobre a zona (Será ativado via JS na Etapa 8) */
+.drop-zone.drag-over {
+    border-color: var(--brand-primary);
+    background-color: var(--brand-primary-light);
+    transform: scale(1.01);
+}
+
+.drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--brand-primary);
+}
+
+.drop-zone-text {
+    font-size: 1.1rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.browse-btn {
+    color: var(--brand-primary);
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* ─── 2.6 NAVEGAÇÃO POR ABAS ─── */
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    transition: all 0.15s ease-in-out;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: var(--brand-primary);
+    background-color: var(--brand-primary-light);
+}
+
+.tab-btn.active {
+    color: var(--brand-primary);
+    border-bottom: 2px solid var(--brand-primary);
+}
+
+/* ─── 2.7 EXIBIÇÃO DE CONTEÚDO DAS ABAS ─── */
+.tab-content-wrapper {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    min-height: 300px;
+}
+
+/* Esconde as abas por padrão, exibe apenas a ativa */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Mensagens de aviso/placeholder temporárias */
+.placeholder-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-muted);
+    font-style: italic;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-primary);
+}
+
+/* ─── 2.8 RODAPÉ (FOOTER) ─── */
+.main-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.security-note {
+    font-weight: 500;
+    color: var(--color-success);
+}
+
+/* RESPONSIVIDADE BÁSICA */
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-direction: column;
+        gap: 0;
+        border-bottom: none;
+    }
+
+    .tab-btn {
+        border-radius: var(--radius-md);
+        border-bottom: none;
+        text-align: left;
+    }
+
+    .tab-btn.active {
+        border-left: 4px solid var(--brand-primary);
+        border-bottom: none;
+        background-color: var(--brand-primary-light);
+    }
+
+    .main-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
